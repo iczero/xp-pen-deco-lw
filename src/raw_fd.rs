@@ -1,35 +1,46 @@
-use std::os::unix::prelude::RawFd;
 use std::ffi::CString;
+use std::os::unix::prelude::{RawFd, AsRawFd};
 
+use libc::{c_void, openat, read, write, AT_FDCWD, EAGAIN, O_NONBLOCK, O_RDWR};
 use tokio::io::unix::AsyncFd;
-use libc::{
-    c_void,
-    openat, AT_FDCWD, O_RDWR, O_NONBLOCK,
-    read, write,
-    EAGAIN
-};
 
 use crate::util::UnixError;
 
-/// Extremely thin wrapper over hidraw
-/// (and probably also other things in the future)
-pub struct HidrawDevice {
-    pub async_poll: AsyncFd<RawFd>
+/// Extremely thin async wrapper over a fd
+pub struct AsyncRawFd {
+    pub async_poll: AsyncFd<RawFd>,
 }
 
-impl HidrawDevice {
+impl AsyncRawFd {
+    pub fn from_fd<T>(handle: &T) -> anyhow::Result<Self>
+        where T: AsRawFd
+    {
+        Ok(AsyncRawFd {
+            async_poll: AsyncFd::new(handle.as_raw_fd())?,
+        })
+    }
+
     /// Open hidraw device. Will block.
     pub fn open(path: String) -> anyhow::Result<Self> {
         unsafe {
-            let fd = openat(AT_FDCWD, CString::new(path)?.into_raw(), O_RDWR | O_NONBLOCK);
+            let fd = openat(
+                AT_FDCWD,
+                CString::new(path)?.into_raw(),
+                O_RDWR | O_NONBLOCK,
+            );
             if fd < 0 {
                 Err(UnixError::capture().into())
             } else {
-                Ok(HidrawDevice {
-                    async_poll: AsyncFd::new(fd)?
+                Ok(AsyncRawFd {
+                    async_poll: AsyncFd::new(fd)?,
                 })
             }
         }
+    }
+
+    /// Get underlying fd
+    pub fn fd(&self) -> RawFd {
+        *self.async_poll.get_ref()
     }
 
     /// Asynchronous read operation
@@ -82,4 +93,6 @@ impl HidrawDevice {
             }
         }
     }
+
+    // TODO: close on drop
 }

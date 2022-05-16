@@ -3,15 +3,22 @@ use anyhow::anyhow;
 
 #[derive(Debug)]
 pub enum Event {
+    /// Battery status updates
     BatteryStatus {
+        /// Battery level, from 0 to 100
         level: u8,
         charging: bool
     },
+
+    /// Shortcut button status
     ShortcutButtons {
         /// Bitfield (8 bits) of pressed buttons
+        ///
         /// WARNING: DO NOT PRESS ALL 8 BUTTONS SIMULTANEOUSLY OR YOU MAY BRICK THE THING
         buttons: u8,
     },
+
+    /// Stylus movement updates
     Stylus {
         tip_pressed: bool,
         lower_button: bool,
@@ -22,9 +29,16 @@ pub enum Event {
         tilt_x: i8,
         tilt_y: i8
     },
+
+    /// Stylus gone
     PenLeft {
         x_pos: u16,
         y_pos: u16
+    },
+
+    /// Command specific to included USB "bluetooth" adapter.
+    WirelessAdapterStatus {
+        connected: bool
     }
 }
 
@@ -82,6 +96,13 @@ impl Event {
                 let y_pos = buf.get_u16_le();
                 Ok(Event::PenLeft { x_pos, y_pos })
             },
+            0xf8 => {
+                // wireless adapter status
+                // no idea what most of this means
+                let byte1 = buf.get_u8();
+                let connected = byte1 & 0b10 != 0;
+                Ok(Event::WirelessAdapterStatus { connected })
+            }
             _ => Err(anyhow!("Unhandled type"))
         }
     }

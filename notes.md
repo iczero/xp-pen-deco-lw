@@ -1,6 +1,6 @@
 # XP-Pen Deco L(W) "managed" mode HID interface
 
-Disclaimer: I understand none of this.
+**WARNING: RISK OF BRICKING. DO NOT USE.**
 
 I am using the term "managed mode" to describe the mode where the tablet uses vendor-specific HID packets to communicate with the "pentablet" driver.
 

@@ -1002,6 +1002,7 @@ dependencies = [
  "thiserror",
  "tokio",
  "zbus",
+ "zbus_macros",
 ]
 
 [[package]]

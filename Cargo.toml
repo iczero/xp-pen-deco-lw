@@ -11,6 +11,7 @@ bytes = "1.1.0"
 anyhow = "1.0.57"
 thiserror = "1.0.31"
 zbus = { version = "2.2.0", default-features = false, features = ["tokio"] }
+zbus_macros = "2.1.1"
 netlink-sys = "0.8.2"
 flume = "0.10.12"
 libc = "0.2.125"
